@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recompensa final</title>
+  <link rel="stylesheet" href="Video/style.css" />
+</head>
+<body>
+  <div class="page" id="page">
+    <div class="card">
+      <header class="header">
+        <h1>FELICIDADES, HAS LLEGADO A TU RECOMPENSA FINAL.</h1>
+      </header>
+
+      <div class="video-shell">
+        <video id="finalVideo" autoplay playsinline preload="auto">
+          <source src="Video/AndreVideo.mp4" type="video/mp4" />
+          Tu navegador no soporta video HTML5.
+        </video>
+        <div class="fallback" id="fallback">
+          <div>El navegador bloqueó el audio automático.</div>
+          <button id="soundBtn">TOCAR PARA ACTIVAR SONIDO</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fade-screen" id="fadeScreen" aria-hidden="true">
+    <h2>FELIZ CUMPLEAÑOS ANDRE</h2>
+  </div>
+
+  <script>
+    const video = document.getElementById('finalVideo');
+    const fadeScreen = document.getElementById('fadeScreen');
+    const fallback = document.getElementById('fallback');
+    const soundBtn = document.getElementById('soundBtn');
+
+    // Intenta reproducir con sonido. Si el navegador lo bloquea, muestra un botón mínimo
+    // para activar el audio sin mostrar controles del video.
+    video.muted = false;
+
+    const attemptPlay = async () => {
+      try {
+        await video.play();
+        fallback.classList.remove('show');
+      } catch (err) {
+        fallback.classList.add('show');
+      }
+    };
+
+    attemptPlay();
+
+    soundBtn.addEventListener('click', async () => {
+      try {
+        video.muted = false;
+        await video.play();
+        fallback.classList.remove('show');
+      } catch (err) {
+        // Si sigue bloqueado, se mantiene el aviso.
+      }
+    });
+
+    video.addEventListener('ended', () => {
+      document.body.style.background = '#000';
+      document.getElementById('page').style.display = 'none';
+      fadeScreen.classList.add('show');
+    });
+  </script>
+</body>
+</html>

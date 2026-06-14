@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elige el próximo regalo de cumpleaños</title>
+  <link rel="stylesheet" href="Miku_Characters/style.css" />
+</head>
+<body>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">TIENDA OFICIAL · REGALOS EXCLUSIVOS</p>
+      <h1>ELIGE EL PRÓXIMO REGALO DE CUMPLEAÑOS QUE LE VAS A REGALAR A MALIC</h1>
+      <p class="subtitle">Solo puedes añadir uno al carrito. Elige con cariño... y con muchísimo presupuesto.</p>
+    </header>
+
+    <section class="shop-shell">
+      <aside class="cart-panel">
+        <div class="cart-header">
+          <span class="cart-badge">CARRO</span>
+          <h2>Resumen</h2>
+        </div>
+        <div id="cartEmpty" class="cart-empty">
+          Aún no has añadido ningún regalo.
+        </div>
+        <div id="cartItem" class="cart-item hidden">
+          <img id="cartImage" src="" alt="Regalo elegido" />
+          <div>
+            <h3 id="cartName"></h3>
+            <p id="cartPrice"></p>
+          </div>
+        </div>
+        <button id="nextBtn" class="next-btn hidden" onclick="location.href='5.html'">
+          SIGUIENTE
+        </button>
+      </aside>
+
+      <section class="products-grid" aria-label="Regalos disponibles">
+        <article class="product-card" data-name="Gift 1" data-price="S/ 19,999,999" data-image="Miku_Characters/Gift1.png">
+          <div class="product-image-wrap"><img src="Miku_Characters/Gift1.png" alt="Gift 1" /></div>
+          <div class="product-info">
+            <h3>Gift 1</h3>
+            <p class="price">S/ 19,999,999</p>
+            <button class="add-btn">Añadir al carro</button>
+          </div>
+        </article>
+
+        <article class="product-card" data-name="Gift 2" data-price="S/ 24,500,000" data-image="Miku_Characters/Gift2.png">
+          <div class="product-image-wrap"><img src="Miku_Characters/Gift2.png" alt="Gift 2" /></div>
+          <div class="product-info">
+            <h3>Gift 2</h3>
+            <p class="price">S/ 24,500,000</p>
+            <button class="add-btn">Añadir al carro</button>
+          </div>
+        </article>
+
+        <article class="product-card" data-name="Gift 3" data-price="S/ 31,750,000" data-image="Miku_Characters/Gift3.png">
+          <div class="product-image-wrap"><img src="Miku_Characters/Gift3.png" alt="Gift 3" /></div>
+          <div class="product-info">
+            <h3>Gift 3</h3>
+            <p class="price">S/ 31,750,000</p>
+            <button class="add-btn">Añadir al carro</button>
+          </div>
+        </article>
+
+        <article class="product-card" data-name="Gift 4" data-price="S/ 48,900,000" data-image="Miku_Characters/Gift4.png">
+          <div class="product-image-wrap"><img src="Miku_Characters/Gift4.png" alt="Gift 4" /></div>
+          <div class="product-info">
+            <h3>Gift 4</h3>
+            <p class="price">S/ 48,900,000</p>
+            <button class="add-btn">Añadir al carro</button>
+          </div>
+        </article>
+
+        <article class="product-card" data-name="Gift 5" data-price="S/ 67,300,000" data-image="Miku_Characters/Gift5.png">
+          <div class="product-image-wrap"><img src="Miku_Characters/Gift5.png" alt="Gift 5" /></div>
+          <div class="product-info">
+            <h3>Gift 5</h3>
+            <p class="price">S/ 67,300,000</p>
+            <button class="add-btn">Añadir al carro</button>
+          </div>
+        </article>
+
+        <article class="product-card" data-name="Gift 6" data-price="S/ 99,990,000" data-image="Miku_Characters/Gift6.png">
+          <div class="product-image-wrap"><img src="Miku_Characters/Gift6.png" alt="Gift 6" /></div>
+          <div class="product-info">
+            <h3>Gift 6</h3>
+            <p class="price">S/ 99,990,000</p>
+            <button class="add-btn">Añadir al carro</button>
+          </div>
+        </article>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const cards = Array.from(document.querySelectorAll('.product-card'));
+    const cartEmpty = document.getElementById('cartEmpty');
+    const cartItem = document.getElementById('cartItem');
+    const cartImage = document.getElementById('cartImage');
+    const cartName = document.getElementById('cartName');
+    const cartPrice = document.getElementById('cartPrice');
+    const nextBtn = document.getElementById('nextBtn');
+
+    let selected = false;
+
+    cards.forEach(card => {
+      const btn = card.querySelector('.add-btn');
+      btn.addEventListener('click', () => {
+        if (selected) return;
+        selected = true;
+
+        const name = card.dataset.name;
+        const price = card.dataset.price;
+        const image = card.dataset.image;
+
+        cartEmpty.classList.add('hidden');
+        cartItem.classList.remove('hidden');
+        cartImage.src = image;
+        cartName.textContent = name;
+        cartPrice.textContent = price;
+
+        nextBtn.classList.remove('hidden');
+
+        cards.forEach(other => {
+          const otherBtn = other.querySelector('.add-btn');
+          if (other === card) {
+            other.classList.add('chosen');
+            otherBtn.textContent = 'Agregado';
+            otherBtn.disabled = true;
+          } else {
+            other.classList.add('locked');
+            otherBtn.disabled = true;
+            otherBtn.textContent = 'No disponible';
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escapa de Mocha</title>
+  <style>
+    :root{
+      --bg:#000;
+      --panel: rgba(18,18,24,.82);
+      --panel2: rgba(255,255,255,.06);
+      --text:#f7f7fb;
+      --muted:#b7b7c7;
+      --accent:#d7c6ff;
+      --good:#38d27a;
+      --bad:#ff5f6d;
+      --bar-bg: rgba(255,255,255,.12);
+      --bar-fill: linear-gradient(90deg, #8a5cff 0%, #c77dff 55%, #ff9de0 100%);
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+    }
+
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      background:var(--bg);
+      color:var(--text);
+      overflow:hidden;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    #app{
+      position:relative;
+      width:100vw;
+      height:100vh;
+      background:#000;
+      user-select:none;
+    }
+
+    .top-ui{
+      position:absolute;
+      top:18px;
+      left:50%;
+      transform:translateX(-50%);
+      width:min(940px, calc(100vw - 24px));
+      z-index:30;
+      background:var(--panel);
+      backdrop-filter: blur(10px);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:24px;
+      padding:16px 18px 14px;
+      box-shadow:var(--shadow);
+    }
+
+    .title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+    }
+
+    .title h1{
+      font-size:clamp(18px, 2.2vw, 28px);
+      margin:0;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .hint{
+      color:var(--muted);
+      font-size:clamp(12px, 1.2vw, 14px);
+      white-space:nowrap;
+    }
+
+    .bar-wrap{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .bar{
+      flex:1;
+      position:relative;
+      height:22px;
+      background:var(--bar-bg);
+      border-radius:999px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+    }
+
+    .bar::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:999px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+      pointer-events:none;
+    }
+
+    .bar-fill{
+      position:absolute;
+      left:0;
+      top:0;
+      height:100%;
+      width:50%;
+      border-radius:999px;
+      background:var(--bar-fill);
+      box-shadow:0 0 22px rgba(199,125,255,.35);
+      transition:width .06s linear;
+    }
+
+    .bar-glow{
+      position:absolute;
+      inset:-12px;
+      pointer-events:none;
+      background: radial-gradient(circle at 50% 50%, rgba(199,125,255,.18), transparent 65%);
+      opacity:.75;
+    }
+
+    .bar-text{
+      min-width:84px;
+      text-align:right;
+      font-weight:700;
+      letter-spacing:.03em;
+      color:var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .scene{
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+    }
+
+    .bg-layer{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:100vw;
+      height:min(100vh, 820px);
+      transform:translate(-50%,-50%);
+      overflow:hidden;
+      filter: saturate(1.02) contrast(1.03);
+    }
+
+    .bg-track{
+      position:absolute;
+      inset:0;
+      width:200%;
+      height:100%;
+      display:flex;
+      will-change:transform;
+    }
+
+    .bg-track img{
+      width:50%;
+      height:100%;
+      object-fit:cover;
+      object-position:center center;
+      image-rendering:auto;
+      flex:0 0 50%;
+      pointer-events:none;
+      -webkit-user-drag:none;
+      user-select:none;
+    }
+
+    .vignette{
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at 50% 48%, transparent 0 58%, rgba(0,0,0,.15) 72%, rgba(0,0,0,.45) 100%),
+        linear-gradient(to bottom, rgba(0,0,0,.18), transparent 18%, transparent 84%, rgba(0,0,0,.36));
+      pointer-events:none;
+      z-index:6;
+    }
+
+    .characters{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      height:100%;
+      pointer-events:none;
+      z-index:10;
+    }
+
+    .mocha{
+      position:absolute;
+      left:9%;
+      bottom:12%;
+      width:min(22vw, 280px);
+      max-width:280px;
+      min-width:160px;
+      transform-origin:center center;
+      filter: drop-shadow(0 14px 24px rgba(0,0,0,.5));
+      animation: shake .12s infinite linear;
+    }
+
+    .andre{
+      position:absolute;
+      left:18%;
+      bottom:10%;
+      width:min(18vw, 240px);
+      max-width:240px;
+      min-width:140px;
+      transform:translateX(0);
+      filter: drop-shadow(0 14px 24px rgba(0,0,0,.5));
+      transition: transform .08s linear;
+    }
+
+    @keyframes shake{
+      0%{transform:translate3d(0,0,0) rotate(0deg)}
+      25%{transform:translate3d(1px,-1px,0) rotate(-1deg)}
+      50%{transform:translate3d(-1px,1px,0) rotate(1deg)}
+      75%{transform:translate3d(1px,1px,0) rotate(-.5deg)}
+      100%{transform:translate3d(0,0,0) rotate(0deg)}
+    }
+
+    .overlay{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:40;
+      pointer-events:none;
+      opacity:0;
+      transition:opacity .2s ease;
+      background:rgba(0,0,0,.12);
+    }
+
+    .overlay.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .card{
+      width:min(92vw, 560px);
+      background:rgba(20,20,28,.95);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:28px;
+      padding:28px 24px 22px;
+      box-shadow:0 24px 80px rgba(0,0,0,.55);
+      text-align:center;
+      backdrop-filter: blur(10px);
+    }
+
+    .card h2{
+      margin:0 0 10px;
+      font-size:clamp(30px, 5vw, 54px);
+      letter-spacing:.03em;
+      line-height:1;
+    }
+
+    .card p{
+      margin:0 0 20px;
+      color:var(--muted);
+      font-size:clamp(14px, 1.8vw, 18px);
+      line-height:1.45;
+    }
+
+    .btn-row{
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      appearance:none;
+      border:none;
+      cursor:pointer;
+      padding:16px 24px;
+      min-width:220px;
+      border-radius:18px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      font-size:16px;
+      transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+      color:#14141c;
+      background:linear-gradient(90deg, #f7e5ff, #d8c4ff);
+      box-shadow:0 16px 30px rgba(180,130,255,.25);
+    }
+
+    .btn:hover{ transform:translateY(-1px) scale(1.01); }
+    .btn.secondary{
+      background:linear-gradient(90deg, #ffd7dc, #ff9cad);
+    }
+
+    .alive-msg{
+      color:var(--good);
+      font-weight:700;
+      margin-top:8px;
+    }
+
+    .dead-msg{
+      color:var(--bad);
+      font-weight:700;
+      margin-top:8px;
+    }
+
+    .footer-tip{
+      position:absolute;
+      left:50%;
+      bottom:12px;
+      transform:translateX(-50%);
+      z-index:20;
+      color:rgba(255,255,255,.46);
+      font-size:12px;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+      text-align:center;
+      pointer-events:none;
+      text-shadow:0 1px 6px rgba(0,0,0,.5);
+    }
+
+    @media (max-width: 700px){
+      .top-ui{ padding:14px 14px 12px; border-radius:18px; }
+      .hint{ white-space:normal; text-align:right; }
+      .bar-wrap{ gap:8px; }
+      .bar-text{ min-width:70px; }
+      .mocha{ left:3%; bottom:15%; width:34vw; min-width:120px; }
+      .andre{ bottom:12%; width:28vw; min-width:110px; }
+      .card{ padding:24px 18px 18px; border-radius:22px; }
+      .btn{ min-width:180px; padding:14px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="top-ui">
+      <div class="title">
+        <h1>SPAMEA EL ESPACIO</h1>
+        <div class="hint">Mientras más avanza la barra, más difícil es escapar.</div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar" aria-label="Barra de escape">
+          <div class="bar-glow"></div>
+          <div class="bar-fill" id="barFill"></div>
+        </div>
+        <div class="bar-text" id="barText">50%</div>
+      </div>
+    </div>
+
+    <div class="scene">
+      <div class="bg-layer">
+        <div class="bg-track" id="bgTrack">
+          <img src="Mocha_Characters/Background.png" alt="Background" />
+          <img src="Mocha_Characters/Background2.png" alt="Background continuation" />
+        </div>
+      </div>
+      <div class="vignette"></div>
+
+      <div class="characters">
+        <img class="mocha" src="Mocha_Characters/Mocha.png" alt="Mocha" id="mochaImg" />
+        <img class="andre" src="Mocha_Characters/Andre.png" alt="Andre" id="andreImg" />
+      </div>
+    </div>
+
+    <div class="overlay" id="overlay">
+      <div class="card">
+        <h2 id="resultTitle">¡LO LOGRASTE!</h2>
+        <p id="resultText">Andre escapó de Mocha por poco. Ahora puedes continuar al siguiente nivel.</p>
+        <div class="btn-row" id="buttonRow"></div>
+      </div>
+    </div>
+
+    <div class="footer-tip">Pulsa espacio repetidamente para escapar</div>
+  </div>
+
+  <script>
+    (() => {
+      const barFill = document.getElementById('barFill');
+      const barText = document.getElementById('barText');
+      const andreImg = document.getElementById('andreImg');
+      const bgTrack = document.getElementById('bgTrack');
+      const mochaImg = document.getElementById('mochaImg');
+      const overlay = document.getElementById('overlay');
+      const resultTitle = document.getElementById('resultTitle');
+      const resultText = document.getElementById('resultText');
+      const buttonRow = document.getElementById('buttonRow');
+
+      const state = {
+        progress: 50,
+        running: true,
+        lastTime: performance.now(),
+        bgX: 0,
+        speed: 120,
+        pressCount: 0,
+        lastPress: 0,
+      };
+
+      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+      const lerp = (a, b, t) => a + (b - a) * t;
+
+      function difficulty(progress){
+        // Más adelante del juego, más difícil subir y más rápido baja.
+        return {
+          gain: Math.max(8.2, 8.2 - progress / 11.5),
+          drain: 30.0 + progress / 26,
+          bgSpeed: 100 + progress * 1.1,
+          mochaShake: 30 + progress / 22
+        };
+      }
+
+      function updateUI(){
+        const p = clamp(state.progress, 0, 100);
+        barFill.style.width = p + '%';
+        barText.textContent = Math.round(p) + '%';
+
+        // Andre avanza conforme sube la barra.
+        const x = lerp(8, 62, p / 100);
+        const y = lerp(2, -2, p / 100);
+        andreImg.style.transform = `translateX(${x}vw) translateY(${y}px)`;
+
+        // Mocha se ve más agresivo con pequeñas vibraciones adicionales.
+        const diff = difficulty(p);
+        mochaImg.style.animationDuration = Math.max(0.06, 0.14 - (p / 250)).toFixed(3) + 's';
+        mochaImg.style.filter = `drop-shadow(0 14px 24px rgba(0,0,0,.5)) saturate(${1 + p/260})`;
+      }
+
+      function showResult(win){
+        state.running = false;
+        overlay.classList.add('show');
+        buttonRow.innerHTML = '';
+
+        if(win){
+          resultTitle.textContent = '¡LO LOGRASTE!';
+          resultText.textContent = 'Andre escapó de Mocha. El camino sigue abierto.';
+          const btn = document.createElement('button');
+          btn.className = 'btn';
+          btn.textContent = 'SIGUIENTE';
+          btn.onclick = () => window.location.href = '4.html';
+          buttonRow.appendChild(btn);
+        }else{
+          resultTitle.textContent = 'MOCHA TE ALCANZÓ';
+          resultText.textContent = 'No alcanzaste a escapar esta vez. Puedes intentarlo otra vez.';
+          const btn = document.createElement('button');
+          btn.className = 'btn secondary';
+          btn.textContent = 'REINICIAR';
+          btn.onclick = () => window.location.reload();
+          buttonRow.appendChild(btn);
+        }
+      }
+
+      function spaceBoost(){
+        if(!state.running) return;
+
+        const now = performance.now();
+        state.pressCount += 1;
+        const diff = difficulty(state.progress);
+
+        // Más difícil mientras más avanza.
+        const fatiguePenalty = Math.max(0.45, 1 - state.pressCount * 0.012);
+        const quickSpamPenalty = (now - state.lastPress < 120) ? 0.84 : 1;
+        const gain = diff.gain * fatiguePenalty * quickSpamPenalty;
+
+        state.progress += gain;
+        state.lastPress = now;
+
+        if(state.progress >= 100){
+          state.progress = 100;
+          updateUI();
+          showResult(true);
+          return;
+        }
+
+        updateUI();
+      }
+
+      function tick(now){
+        const dt = Math.min(0.033, (now - state.lastTime) / 1000);
+        state.lastTime = now;
+
+        if(state.running){
+          const diff = difficulty(state.progress);
+
+          // La barra baja sola, y cada vez baja más rápido.
+          state.progress -= diff.drain * dt;
+
+          // Mueve el fondo en loop.
+          state.bgX -= diff.bgSpeed * dt;
+          const trackWidth = bgTrack.scrollWidth / 2 || window.innerWidth;
+          const loopWidth = Math.max(trackWidth, window.innerWidth);
+          if(state.bgX <= -loopWidth) state.bgX += loopWidth;
+
+          bgTrack.style.transform = `translateX(${state.bgX}px)`;
+
+          if(state.progress <= 0){
+            state.progress = 0;
+            updateUI();
+            showResult(false);
+            return;
+          }
+
+          updateUI();
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      window.addEventListener('keydown', (e) => {
+        if(e.code === 'Space'){
+          e.preventDefault();
+          spaceBoost();
+        }
+      }, { passive: false });
+
+      window.addEventListener('blur', () => {
+        state.lastTime = performance.now();
+      });
+
+      window.addEventListener('resize', updateUI);
+
+      updateUI();
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+</html>

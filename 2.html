@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hazbin Novio</title>
+  <link rel="stylesheet" href="HAzbin_Characters/style.css" />
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <div class="badge">💘 Elige a tu novio Hazbin</div>
+      <h1>¿Con quién te vas a quedar?</h1>
+      <p>
+        Solo puedes escoger a uno. Toca una silueta, deja que el destino haga su trabajo
+        y descubre el mensajito especial que te toca según tu elección.
+      </p>
+      <div class="subnote" id="status">Aún no has elegido a nadie.</div>
+    </section>
+
+    <section class="grid" id="grid" aria-label="Selecciona un personaje">
+      <article class="card" data-name="Lucifer" tabindex="0" role="button" aria-label="Elegir a Lucifer">
+        <div class="character"><img src="HAzbin_Characters/Lucifer.png" alt="Lucifer en silueta" /></div>
+        <h2 class="name">Lucifer</h2>
+        <div class="pick-btn">Elegir a Lucifer</div>
+      </article>
+
+      <article class="card" data-name="Husk" tabindex="0" role="button" aria-label="Elegir a Husk">
+        <div class="character"><img src="HAzbin_Characters/Husk.png" alt="Husk en silueta" /></div>
+        <h2 class="name">Husk</h2>
+        <div class="pick-btn">Elegir a Husk</div>
+      </article>
+
+      <article class="card" data-name="AngelDust" tabindex="0" role="button" aria-label="Elegir a Angel Dust">
+        <div class="character"><img src="HAzbin_Characters/AngelDust.png" alt="Angel Dust en silueta" /></div>
+        <h2 class="name">Angel Dust</h2>
+        <div class="pick-btn">Elegir a Angel Dust</div>
+      </article>
+
+      <article class="card" data-name="Vox" tabindex="0" role="button" aria-label="Elegir a Vox">
+        <div class="character"><img src="HAzbin_Characters/Vox.png" alt="Vox en silueta" /></div>
+        <h2 class="name">Vox</h2>
+        <div class="pick-btn">Elegir a Vox</div>
+      </article>
+
+      <article class="card" data-name="Alastor" tabindex="0" role="button" aria-label="Elegir a Alastor">
+        <div class="character"><img src="HAzbin_Characters/Alastor.png" alt="Alastor en silueta" /></div>
+        <h2 class="name">Alastor</h2>
+        <div class="pick-btn">Elegir a Alastor</div>
+      </article>
+    </section>
+
+    <section class="result" id="result" aria-live="polite">
+      <h2 id="resultTitle"></h2>
+      <p id="resultText"></p>
+    </section>
+
+    <div class="next-wrap" id="nextWrap">
+      <a class="next-btn" href="3.html">SIGUIENTE</a>
+    </div>
+
+    <p class="footer">Una elección, un corazón, y un poquito de caos infernal.</p>
+  </main>
+
+  <script>
+    const messages = {
+      Lucifer: {
+        title: "Lucifer te eligió primero.",
+        text: "Con una sonrisa elegante y esa vibra de rey del infierno, Lucifer te toma la mano como si ya supiera que eras su destino. Entre bromas finas, orgullo y ternura escondida, te deja claro que contigo hasta el caos se ve bonito."
+      },
+      Husk: {
+        title: "Husk dejó su vaso para ti.",
+        text: "Puede que haga de cuenta que no le importa, pero cuando te mira se nota que ya se rindió. Husk te acompaña con esa calma ruda de gato cansado que solo se ablanda contigo. Parece que entre tragos y miradas cruzadas, ya se enamoró sin querer."
+      },
+      AngelDust: {
+        title: "Angel Dust ya anda coqueteando contigo.",
+        text: "Obvio iba a ser dramático, coqueto y demasiado encantador. Angel Dust te guiña un ojo, se acerca con toda la seguridad del mundo y te hace sentir que contigo sí quiere algo real. Entre chistes y poses, terminó enamorándose más de lo que admite."
+      },
+      Vox: {
+        title: "Vox te conectó al primer intento.",
+        text: "Vox quiere impresionar, controlar el brillo y tener la última palabra... pero contigo se le desarma un poco la señal. Fingiendo seguridad, te ofrece una sonrisa eléctrica y un romance lleno de pantallas, glitches y tensión elegante. Ya perdiste: él también cayó."
+      },
+      Alastor: {
+        title: "Alastor sonrió solo para ti.",
+        text: "Qué raro: el Radio Demon se mostró demasiado interesado. Alastor te habla con esa cortesía antigua y esa energía inquietante que solo hace que todo sea más intenso. Entre una sonrisa afilada y un tono encantador, dejó claro que contigo el show apenas empieza."
+      }
+    };
+
+    const cards = [...document.querySelectorAll('.card')];
+    const status = document.getElementById('status');
+    const result = document.getElementById('result');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultText = document.getElementById('resultText');
+    const nextWrap = document.getElementById('nextWrap');
+
+    let selected = false;
+
+    function chooseCard(card) {
+      if (selected) return;
+
+      const name = card.dataset.name;
+      const data = messages[name];
+      if (!data) return;
+
+      selected = true;
+      cards.forEach(c => {
+        c.classList.add('locked');
+        if (c !== card) c.style.pointerEvents = 'none';
+      });
+
+      card.classList.add('selected');
+      card.querySelector('.pick-btn').textContent = 'Elegido';
+      status.textContent = `Elegiste a ${name}.`;
+      resultTitle.textContent = data.title;
+      resultText.textContent = data.text;
+      result.classList.add('show');
+      nextWrap.classList.add('show');
+    }
+
+    cards.forEach(card => {
+      card.addEventListener('click', () => chooseCard(card));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          chooseCard(card);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

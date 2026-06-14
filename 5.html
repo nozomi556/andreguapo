@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rompecabezas SFFX</title>
+  <link rel="stylesheet" href="SFFX_Characters/style.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1>Arma la imagen de SFFX</h1>
+      <p>Mueve las piezas al tablero central. Cuando cada pieza esté en su lugar, se fijará automáticamente.</p>
+      <div class="topline">
+        <div class="badge" id="counter">0 / 16</div>
+        <div class="progress-wrap" aria-label="Progreso del rompecabezas">
+          <div class="progress" id="progress"></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="board-shell">
+        <div class="board" id="board" aria-label="Tablero del rompecabezas"></div>
+      </section>
+
+      <section class="piece-tray">
+        <h2 class="tray-title">Piezas disponibles</h2>
+        <div class="tray" id="tray"></div>
+      </section>
+
+      <div class="actions">
+        <a class="next-btn" id="nextBtn" href="6.html">SIGUIENTE</a>
+      </div>
+      <div class="win" id="winText">¡Rompecabezas completo!</div>
+    </main>
+  </div>
+
+<script>
+(() => {
+  const board = document.getElementById('board');
+  const tray = document.getElementById('tray');
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  const nextBtn = document.getElementById('nextBtn');
+  const winText = document.getElementById('winText');
+
+  const rows = 4;
+  const cols = 4;
+  const total = rows * cols;
+  const imageUrl = 'SFFX_Characters/Sffx.png';
+
+  const slots = [];
+  const pieces = [];
+  let placedCount = 0;
+
+  // Build board slots
+  for (let i = 0; i < total; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    slot.dataset.index = String(i);
+    board.appendChild(slot);
+    slots.push(slot);
+  }
+
+  function updateUI() {
+    counter.textContent = `${placedCount} / ${total}`;
+    progress.style.width = `${(placedCount / total) * 100}%`;
+    if (placedCount === total) {
+      nextBtn.classList.add('show');
+      winText.classList.add('show');
+    }
+  }
+
+  function createPiece(index) {
+    const piece = document.createElement('div');
+    piece.className = 'piece';
+    piece.dataset.index = String(index);
+    piece.dataset.correct = String(index);
+    piece.style.backgroundImage = `url('${imageUrl}')`;
+
+    const row = Math.floor(index / cols);
+    const col = index % cols;
+    piece.style.backgroundPosition = `${(col / (cols - 1)) * 100}% ${(row / (rows - 1)) * 100}%`;
+    // For 4x4, using percentages can be a bit off with rounding; use exact CSS calc via size ratio below:
+    piece.style.backgroundSize = `${cols * 100}% ${rows * 100}%`;
+    piece.style.backgroundPosition = `${(col / (cols - 1)) * 100}% ${(row / (rows - 1)) * 100}%`;
+
+    const rect = { x: 0, y: 0, offsetX: 0, offsetY: 0, dragging: false };
+    let fixed = false;
+
+    function pointerDown(e) {
+      if (fixed) return;
+      e.preventDefault();
+      piece.classList.add('dragging');
+      rect.dragging = true;
+      const clientX = e.clientX ?? (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY ?? (e.touches && e.touches[0].clientY);
+      const current = piece.getBoundingClientRect();
+      rect.offsetX = clientX - current.left;
+      rect.offsetY = clientY - current.top;
+      document.body.appendChild(piece);
+      moveAt(clientX, clientY);
+      window.addEventListener('pointermove', pointerMove);
+      window.addEventListener('pointerup', pointerUp);
+    }
+
+    function moveAt(clientX, clientY) {
+      piece.style.position = 'fixed';
+      piece.style.left = `${clientX - rect.offsetX}px`;
+      piece.style.top = `${clientY - rect.offsetY}px`;
+      piece.style.transform = 'scale(1.03)';
+    }
+
+    function pointerMove(e) {
+      if (!rect.dragging) return;
+      moveAt(e.clientX, e.clientY);
+    }
+
+    function pointerUp(e) {
+      if (!rect.dragging) return;
+      rect.dragging = false;
+      window.removeEventListener('pointermove', pointerMove);
+      window.removeEventListener('pointerup', pointerUp);
+
+      const clientX = e.clientX;
+      const clientY = e.clientY;
+
+      // Try snapping to the correct slot only
+      const targetSlot = slots[index];
+      const slotRect = targetSlot.getBoundingClientRect();
+      const centerX = slotRect.left + slotRect.width / 2;
+      const centerY = slotRect.top + slotRect.height / 2;
+      const dist = Math.hypot(clientX - centerX, clientY - centerY);
+
+      if (dist < Math.max(slotRect.width, slotRect.height) * 0.6) {
+        snapToCorrectSlot(piece, targetSlot);
+      } else {
+        returnToTray(piece);
+      }
+    }
+
+    piece.addEventListener('pointerdown', pointerDown);
+    piece.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+
+    return { piece, fixedRef: () => fixed, setFixed: (v) => fixed = v };
+  }
+
+  function snapToCorrectSlot(piece, slot) {
+    if (slot.children.length > 0) returnToTray(piece); // safety
+    slot.classList.add('correct');
+    slot.appendChild(piece);
+    piece.style.position = 'absolute';
+    piece.style.left = '0';
+    piece.style.top = '0';
+    piece.style.width = '100%';
+    piece.style.height = '100%';
+    piece.style.transform = 'none';
+    piece.classList.remove('dragging');
+    piece.classList.add('placed');
+    piece.style.pointerEvents = 'none';
+    placedCount++;
+    updateUI();
+  }
+
+  function returnToTray(piece) {
+    piece.classList.remove('dragging');
+    piece.style.position = '';
+    piece.style.left = '';
+    piece.style.top = '';
+    piece.style.transform = '';
+    piece.style.width = '';
+    piece.style.height = '';
+    tray.appendChild(piece);
+  }
+
+  for (let i = 0; i < total; i++) {
+    const { piece } = createPiece(i);
+    tray.appendChild(piece);
+    pieces.push(piece);
+  }
+
+  updateUI();
+})();
+</script>
+</body>
+</html>
